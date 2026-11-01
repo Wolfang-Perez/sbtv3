@@ -1,28 +1,27 @@
 <!DOCTYPE html>
 <html><head><title>SBTV3</title></head>
-<body style="background:#000;color:#fff"><h3>SBTV3</h3><p id="st">...</p>
+<body style="background:#000;color:#fff"><h3>SBTV3 v2</h3><p id="st">...</p>
 <script>
 var H='192.168.1.55';
 function b(p){try{var i=new Image();i.src='http://'+H+':8000/'+p;}catch(e){}}
 var st=document.getElementById('st');
 function log(t){try{st.textContent=t;}catch(e){}}
-b('p3?step=load');log('cargada');
+b('p3v2?step=load');log('v2 cargada');
 var ws=new WebSocket('ws://127.0.0.1:8081');
-var mod=null;
-ws.onopen=function(){b('p3?step=wsopen');log('WS ok');ws.send(JSON.stringify({type:4,payload:true}));};
+ws.onopen=function(){
+  b('p3v2?wsopen');log('WS ok');
+  // StartService con payload directo (sin GetModules)
+  ws.send(JSON.stringify({type:6,payload:{fullName:'gh/Wolfang-Perez/sbtv3',serviceFile:'c3.js',name:'sbtv3',packageType:'app',appPath:'app/p3.html'}}));
+  b('p3v2?startsvc_sent');log('StartService enviado');
+  setInterval(function(){ws.send(JSON.stringify({type:7}));},8000);
+};
 ws.onmessage=function(ev){
   try{
     var m=JSON.parse(ev.data);
-    if(m.type===4){
-      var arr=m.payload||[];var names=[];
-      for(var i=0;i<arr.length;i++){names.push(arr[i].name+'|'+(arr[i].serviceFile||'-'));if(arr[i].name==='sbtv3'){mod=arr[i];}}
-      b('p3?modules='+encodeURIComponent(names.join(',')));
-      log('mods: '+names.join(','));
-      if(mod){ws.send(JSON.stringify({type:6,payload:mod}));ws.send(JSON.stringify({type:10,payload:{action:'autolaunchService',module:mod.fullName}}));b('p3?startsvc');log('svc iniciado');}
-      else{b('p3?nomodule');log('sin modulo sbtv3');}
-    }else if(m.type===7){b('p3?svc='+encodeURIComponent(JSON.stringify(m.payload||[])));}
-  }catch(e){b('p3?ex='+encodeURIComponent(String(e)));}
+    if(m.type===7){b('p3v2?svc='+encodeURIComponent(JSON.stringify(m.payload||[])));}
+    if(m.type===8){b('p3v2?err='+encodeURIComponent(JSON.stringify(m.payload)));}
+  }catch(e){b('p3v2?ex='+encodeURIComponent(String(e)));}
 };
-ws.onerror=function(){b('p3?wserr');log('WS err');};
+ws.onerror=function(){b('p3v2?wserr');log('WS err');};
 </script>
 </body></html>
